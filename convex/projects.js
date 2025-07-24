@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { v } from "convex/values";
 
 export const create = mutation({
   args: {
@@ -27,14 +28,15 @@ export const create = mutation({
       }
     }
 
-    await ctx.db.insert("projects", {
-      title: v.string(),
-      originalImageUrl: v.optional(v.string()),
-      currentImageUrl: v.optional(v.string()),
-      thumbnailUrl: v.optional(v.string()),
-      width: v.number(),
-      height: v.number(),
-      canvasState: v.optional(v.any()),
+    const projectId = await ctx.db.insert("projects", {
+      title: args.title,
+      userId: user._id,
+      originalImageUrl: args.originalImageUrl,
+      currentImageUrl: args.currentImageUrl,
+      thumbnailUrl: args.thumbnailUrl,
+      width: args.width,
+      height: args.height,
+      canvasState: args.canvasState,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -50,7 +52,7 @@ export const create = mutation({
 });
 
 export const getUserProjects = query({
-  handler: async () => {
+  handler: async (ctx) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
 
     const projects = await ctx.db
