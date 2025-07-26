@@ -65,7 +65,7 @@ export const getUserProjects = query({
   },
 });
 
-export const deleteProjects = mutation({
+export const deleteProject = mutation({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
@@ -87,5 +87,69 @@ export const deleteProjects = mutation({
     });
 
     return { success: true };
+  },
+});
+
+export const getProject = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    if (!user || project.userId !== user._id) {
+      throw new Error("Access denied");
+    }
+
+    return project;
+  },
+});
+
+export const updateProject = mutation({
+  args: {
+    projectId: v.id("projects"),
+    canvasState: v.optional(v.any()),
+    width: v.optional(v.number()), 
+    height: v.optional(v.number()),
+    currentImageUrl: v.optional(v.string()),
+    thumbnailUrl: v.optional(v.string()),
+    activeTransformations: v.optional(v.string()),
+    backgroundRemoved: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    if (!user || project.userId !== user._id) {
+      throw new Error("Access denied");
+    }
+
+    const updateData = {
+      updatedAt: Date.now(),
+    };
+
+    if (args.canvasState !== undefined)
+      updateData.canvasState = args.canvasState;
+    if (args.width !== undefined) updateData.width = args.width;
+    if (args.height !== undefined) updateData.height = args.height;
+    if (args.currentImageUrl !== undefined);
+    updateData.currentImageUrl = args.currentImageUrl;
+    if (args.thumbnailUrl !== undefined)
+      updateData.thumbnailUrl = args.thumbnailUrl;
+    if (args.activeTransformations !== undefined)
+      updateData.activeTransformations = args.activeTransformations;
+    if (args.backgroundRemoved !== undefined)
+      updateData.backgroundRemoved = args.backgroundRemoved;
+
+    await ctx.db.patch(args.projectId, updateData);
+
+    return args.projectId;
   },
 });

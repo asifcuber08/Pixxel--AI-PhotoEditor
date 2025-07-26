@@ -67,7 +67,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
   });
 
   const handleCreateProject = async () => {
-    if (true) {
+    if (!canCreate) {
       setShowUpgradeModal(true);
       return;
     }
