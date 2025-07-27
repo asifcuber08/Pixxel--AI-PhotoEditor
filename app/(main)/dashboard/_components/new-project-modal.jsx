@@ -23,39 +23,33 @@ import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
 const NewPorjectModal = ({ isOpen, onClose }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [projectTitle, setProjectTitle] = useState("");
-  const [seletedFile, setSeletedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [projectTitle, setProjectTitle] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const { mutate: createProject } = useConvexMutation(api.projects.create);
+  const { data: projects } = useConvexQuery(api.projects.getUserProjects);
+  const { canCreateProject, isFree } = usePlanAccess();
   const router = useRouter();
 
-  const handleClose = () => {
-    setSeletedFile(null);
-    setPreviewUrl(null);
-    setProjectTitle("");
-    setIsUploading(false);
-    onClose();
-  };
-
-  const { isFree, canCreateProject } = usePlanAccess();
-  const { data: projects } = useConvexQuery(api.projects.getUserProjects);
-  const { mutate: createProject } = useConvexMutation(api.projects.create);
-
+  // Check if user can create new project
   const currentProjectCount = projects?.length || 0;
   const canCreate = canCreateProject(currentProjectCount);
 
-  const onDrop = (acceptedFiles) => {
+  // Handle file drop
+  const onDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0];
-
     if (file) {
-      setSeletedFile(file);
+      setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
 
+      // Auto-generate title from filename
       const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
       setProjectTitle(nameWithoutExt || "Untitled Project");
     }
-  };
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -66,13 +60,15 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
     maxSize: 20 * 1024 * 1024, // 20MB limit
   });
 
+  // Handle create project with plan limit check
   const handleCreateProject = async () => {
+    // Check project limits first
     if (!canCreate) {
       setShowUpgradeModal(true);
       return;
     }
 
-    if (!seletedFile || !projectTitle.trim()) {
+    if (!selectedFile || !projectTitle.trim()) {
       toast.error("Please select an image and enter a project title");
       return;
     }
@@ -80,9 +76,10 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
     setIsUploading(true);
 
     try {
+      // Upload to ImageKit via our API route
       const formData = new FormData();
-      formData.append("file", seletedFile);
-      formData.append("filename", seletedFile.name);
+      formData.append("file", selectedFile);
+      formData.append("fileName", selectedFile.name);
 
       const uploadResponse = await fetch("/api/imagekit/upload", {
         method: "POST",
@@ -95,6 +92,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
         throw new Error(uploadData.error || "Failed to upload image");
       }
 
+      // Create project in Convex
       const projectId = await createProject({
         title: projectTitle.trim(),
         originalImageUrl: uploadData.url,
@@ -107,6 +105,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
 
       toast.success("Project created successfully!");
 
+      // Navigate to editor
       router.push(`/editor/${projectId}`);
     } catch (error) {
       console.error("Error creating project:", error);
@@ -118,23 +117,39 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // Reset modal state
+  const handleClose = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setProjectTitle("");
+    setIsUploading(false);
+    onClose();
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl bg-slate-800 border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">
-              Create New Project
-            </DialogTitle>
-
-            {isFree && (
-              <Badge variant="Secondary" className="bg-slate-700 text-white/70">
-                {currentProjectCount}/3 projects
-              </Badge>
-            )}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <DialogTitle className="text-2xl font-bold text-white">
+                  Create New Project
+                </DialogTitle>
+                {isFree && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-slate-700 text-white/70"
+                  >
+                    {currentProjectCount}/3 projects
+                  </Badge>
+                )}
+              </div>
+            </div>
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Project Limit Warning for Free Users */}
             {isFree && currentProjectCount >= 2 && (
               <Alert className="bg-amber-500/10 border-amber-500/20">
                 <Crown className="h-5 w-5 text-amber-400" />
@@ -143,22 +158,21 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
                     {currentProjectCount === 2
                       ? "Last Free Project"
                       : "Project Limit Reached"}
-
-                    {currentProjectCount === 2
-                      ? "This will be your last free project. Upgrade to Pixxel Pro for unlimited projects."
-                      : "Free Plan is limited to 3 projects. Upgrade to Pixxel Pro to create more projects."}
                   </div>
+                  {currentProjectCount === 2
+                    ? "This will be your last free project. Upgrade to Pixxel Pro for unlimited projects."
+                    : "Free plan is limited to 3 projects. Upgrade to Pixxel Pro to create more projects."}
                 </AlertDescription>
               </Alert>
             )}
 
-            {/* Upload Area */}
-            {!seletedFile ? (
+            {/* File Upload Area */}
+            {!selectedFile ? (
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
                   isDragActive
-                    ? "border-cyan-400 bg-cyan-400/40"
+                    ? "border-cyan-400 bg-cyan-400/5"
                     : "border-white/20 hover:border-white/40"
                 } ${!canCreate ? "opacity-50 pointer-events-none" : ""}`}
               >
@@ -170,14 +184,15 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
                 <p className="text-white/70 mb-4">
                   {canCreate
                     ? "Drag and drop your image, or click to browse"
-                    : "upgrade to Pro to create more projects"}
-                </p>{" "}
+                    : "Upgrade to Pro to create more projects"}
+                </p>
                 <p className="text-sm text-white/50">
-                  Support PNG, JPG, WEBP up to 20MB
+                  Supports PNG, JPG, WEBP up to 20MB
                 </p>
               </div>
             ) : (
               <div className="space-y-6">
+                {/* Image Preview */}
                 <div className="relative">
                   <img
                     src={previewUrl}
@@ -188,7 +203,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      setSeletedFile(null);
+                      setSelectedFile(null);
                       setPreviewUrl(null);
                       setProjectTitle("");
                     }}
@@ -198,6 +213,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
                   </Button>
                 </div>
 
+                {/* Project Title Input */}
                 <div className="space-y-2">
                   <Label htmlFor="project-title" className="text-white">
                     Project Title
@@ -212,15 +228,16 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
                   />
                 </div>
 
+                {/* File Details */}
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <ImageIcon className="h-5 w-5 text-cyan-400" />
                     <div>
                       <p className="text-white font-medium">
-                        {seletedFile.name}
+                        {selectedFile.name}
                       </p>
                       <p className="text-white/70 text-sm">
-                        {(seletedFile.size / 1024 / 1024).toFixed(2)} MB
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   </div>
@@ -229,7 +246,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          <DialogFooter className={"gap-3"}>
+          <DialogFooter className="gap-3">
             <Button
               variant="ghost"
               onClick={handleClose}
@@ -241,7 +258,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
 
             <Button
               onClick={handleCreateProject}
-              disabled={!seletedFile || !projectTitle.trim() || isUploading}
+              disabled={!selectedFile || !projectTitle.trim() || isUploading}
               variant="primary"
             >
               {isUploading ? (
@@ -257,6 +274,7 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Upgrade Modal */}
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
@@ -265,6 +283,6 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
       />
     </>
   );
-};
+}
 
 export default NewPorjectModal;

@@ -35,21 +35,22 @@ const ProjectCard = ({ project, onEdit }) => {
 
   return (
     <Card className="py-0 group relative bg-slate-800/50 overflow-hidden hover:border-white/20 transition-all hover:transform hover:scale-[1.02]">
+      {/* Thumbnail */}
       <div className="aspect-video bg-slate-700 relative overflow-hidden">
         {project.thumbnailUrl && (
           <img
             src={project.thumbnailUrl}
-            alt={project.thumbnailUrl}
-            className="w-full h-full object-conver"
+            alt={project.title}
+            className="w-full h-full object-cover"
           />
         )}
 
+        {/* Hover Actions */}
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <Button variant="glass" size="sm" onClick={onEdit} className="gap-2">
             <Edit className="h-4 w-4" />
             Edit
           </Button>
-
           <Button
             variant="glass"
             size="sm"
@@ -62,22 +63,25 @@ const ProjectCard = ({ project, onEdit }) => {
           </Button>
         </div>
       </div>
-      <CardContent className={"pb-6"}>
+
+      {/* Project Info */}
+      <CardContent className="pb-6">
         <h3 className="font-semibold text-white mb-1 truncate">
           {project.title}
         </h3>
+
         <div className="flex items-center justify-between text-sm text-white/70">
           <span>Updated {lastUpdated}</span>
           <Badge
             variant="secondary"
             className="text-xs bg-slate-700 text-white/70"
           >
-            {project.width} X {project.height}
+            {project.width} × {project.height}
           </Badge>
         </div>
       </CardContent>
     </Card>
   );
-};
+}
 
 export default ProjectCard;

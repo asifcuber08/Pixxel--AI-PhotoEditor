@@ -223,6 +223,22 @@ const CanvasEditor = ({ project }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, [canvasEditor, project]);
 
+  useEffect(() => {
+    if (!canvasEditor) return;
+
+    switch (activeTool) {
+      case "crop":
+        // Crop tool shows crosshair cursor for presision selection
+        canvasEditor.defaultCursor = "crosshair";
+        canvasEditor.hoverCursor = "crosshair";
+        break;
+      default:
+        // Default tools show standard cursor
+        canvasEditor.defaultCursor = "default";
+        canvasEditor.hoverCursor = "move";
+    }
+  }, [canvasEditor, activeTool]);
+
   return (
     <div
       ref={containerRef}
