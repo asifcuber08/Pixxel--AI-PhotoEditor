@@ -83,9 +83,8 @@ const DEFAULT_VALUES = FILTER_CONFIGS.reduce((acc, config) => {
 }, {});
 
 const AdjustControls = () => {
-  const [filterValues, setFilterValues] = useState(DEFAULT_VALUES);
+ const [filterValues, setFilterValues] = useState(DEFAULT_VALUES);
   const [isApplying, setIsApplying] = useState(false);
-
   const { canvasEditor } = useCanvas();
 
   const getActiveImage = () => {
@@ -93,9 +92,9 @@ const AdjustControls = () => {
     const activeObject = canvasEditor.getActiveObject();
 
     if (activeObject && activeObject.type === "image") return activeObject;
-
+    
     const objects = canvasEditor.getObjects();
-    return objects.find((obj) => obj.type === "image" || null);
+    return objects.find((obj) => obj.type === "image") || null;
   };
 
   const applyFilters = async (newValues) => {
@@ -109,7 +108,6 @@ const AdjustControls = () => {
 
       FILTER_CONFIGS.forEach((config) => {
         const value = newValues[config.key];
-
         if (value !== config.defaultValue) {
           const transformedValue = config.transform(value);
           filtersToApply.push(
@@ -139,7 +137,6 @@ const AdjustControls = () => {
       ...filterValues,
       [filterKey]: Array.isArray(value) ? value[0] : value,
     };
-
     setFilterValues(newValues);
     applyFilters(newValues);
   };
@@ -152,32 +149,34 @@ const AdjustControls = () => {
   const extractFilterValues = (imageObject) => {
     if (!imageObject?.filters?.length) return DEFAULT_VALUES;
 
-    const extractFilterValues = { ...DEFAULT_VALUES };
+    const extractedValues = { ...DEFAULT_VALUES };
 
     imageObject.filters.forEach((filter) => {
       const config = FILTER_CONFIGS.find(
         (c) => c.filterClass.name === filter.constructor.name
       );
-
       if (config) {
         const filterValue = filter[config.valueKey];
         if (config.key === "hue") {
-          extractValues[config.key] = Math.round(filterValue * (180 / Math.PI));
-        } else extractValues[config.key] = Math.round(filterValue * 100);
+          extractedValues[config.key] = Math.round(
+            filterValue * (180 / Math.PI)
+          );
+        } else {
+          extractedValues[config.key] = Math.round(filterValue * 100);
+        }
       }
     });
 
-    return extractValues;
+    return extractedValues;
   };
 
   useEffect(() => {
     const imageObject = getActiveImage();
-
     if (imageObject?.filters) {
       const existingValues = extractFilterValues(imageObject);
       setFilterValues(existingValues);
     }
-  }, []);
+  }, [canvasEditor]);
 
   if (!canvasEditor) {
     return (
@@ -189,11 +188,22 @@ const AdjustControls = () => {
     );
   }
 
+  const activeImage = getActiveImage();
+  if (!activeImage) {
+    return (
+      <div className="p-4">
+        <p className="text-white/70 text-sm">
+          Select an image to adjust filters
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Reset */}
+      {/* Reset Button */}
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium text-white">Image Adjustments</h3>{" "}
+        <h3 className="text-sm font-medium text-white">Image Adjustments</h3>
         <Button
           variant="ghost"
           size="sm"
@@ -205,41 +215,39 @@ const AdjustControls = () => {
         </Button>
       </div>
 
-      {/* Filters */}
-      {FILTER_CONFIGS.map((config) => {
-        return (
-          <div key={config.key} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-sm text-white">{config.label}</label>
-              <span className="text-xs text-white/70">
-                {filterValues[config.key]}
-                {config.suffix || ""}
-              </span>
-            </div>
-
-            <Slider
-              value={[filterValues[config.key]]}
-              onValueChange={(value) => handleValueChange(config.key, value)}
-              min={config.min}
-              max={config.max}
-              step={config.step}
-              className="w-full"
-            />
+      {/* Filter Controls */}
+      {FILTER_CONFIGS.map((config) => (
+        <div key={config.key} className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="text-sm text-white">{config.label}</label>
+            <span className="text-xs text-white/70">
+              {filterValues[config.key]}
+              {config.suffix || ""}
+            </span>
           </div>
-        );
-      })}
+          <Slider
+            value={[filterValues[config.key]]}
+            onValueChange={(value) => handleValueChange(config.key, value)}
+            min={config.min}
+            max={config.max}
+            step={config.step}
+            className="w-full"
+          />
+        </div>
+      ))}
 
       {/* Info */}
       <div className="mt-6 p-3 bg-slate-700/50 rounded-lg">
         <p className="text-xs text-white/70">
-          Adjustment are applied in real-time. Use the Reset button to restore
+          Adjustments are applied in real-time. Use the Reset button to restore
           original values.
         </p>
       </div>
 
+      {/* Processing Indicator */}
       {isApplying && (
         <div className="flex items-center justify-center py-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-400"></div>
           <span className="ml-2 text-xs text-white/70">
             Applying filters...
           </span>
@@ -247,6 +255,6 @@ const AdjustControls = () => {
       )}
     </div>
   );
-};
+}
 
 export default AdjustControls;

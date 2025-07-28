@@ -67,7 +67,7 @@ const EditorTopBar = ({ project }) => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [restrictedTool, setRestrictedTool] = useState(null);
 
-  const { activeTool, onToolChange, canvasEditor } = useCanvas;
+  const { activeTool, onToolChange, canvasEditor } = useCanvas();
   const { hasAccess, canExport, isFree } = usePlanAccess();
 
   const handleBackToDashboard = () => {

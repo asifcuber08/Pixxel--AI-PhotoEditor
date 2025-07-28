@@ -13,9 +13,6 @@ import CropContent from "./_tools/crop";
 import ResizeControls from "./_tools/resize";
 import AdjustControls from "./_tools/adjust";
 
-
-
-
 const TOOL_CONFIGS = {
   resize: {
     title: "Resize",
@@ -77,7 +74,9 @@ const EditorSidebar = ({ project }) => {
         <p className="text-sm text-white mt-1">{toolConfig.description}</p>
       </div>
 
-      <div className="flex-1 p-4">{renderToolConfig(activeTool, project)}</div>
+      <div className="flex-1 p-4 overflow-y-scroll">
+        {renderToolConfig(activeTool, project)}
+      </div>
     </div>
   );
 };
