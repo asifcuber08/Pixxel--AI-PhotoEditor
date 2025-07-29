@@ -2,14 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/context/context";
-import { Rect } from "fabric";
+import { FabricImage, Rect } from "fabric";
 import {
+  CheckCheck,
   Crop,
   Maximize,
   RectangleHorizontal,
   RectangleVertical,
   Smartphone,
   Square,
+  X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
@@ -185,6 +187,77 @@ const CropContent = () => {
     canvasEditor.requestRenderAll();
   };
 
+  const applyAspectRatio = (ratio) => {
+    setSelectedRatio(ratio);
+
+    if (!cropRect || ratio == null) return;
+
+    const currentWidth = cropRect.width * cropRect.scaleX;
+    const newHeight = currentWidth / ratio;
+
+    cropRect.set({
+      height: newHeight / cropRect.scaleY,
+      scaleY: cropRect.scaleX,
+    });
+
+    canvasEditor.requestRenderAll();
+  };
+
+  const applyCrop = () => {
+    if (!selectedImage || !cropRect) return;
+
+    try {
+      const cropBounds = cropRect.getBoundingRect();
+      const imageBounds = selectedImage.getBoundingRect();
+
+      const cropX = Math.max(0, cropBounds.left - imageBounds.left);
+      const cropY = Math.max(0, cropBounds.top - imageBounds.top);
+      const cropWidth = Math.min(cropBounds.width, imageBounds.width - cropX);
+      const cropHeight = Math.min(
+        cropBounds.height,
+        imageBounds.height - cropY
+      );
+
+      const imageScaleX = selectedImage.scaleX || 1;
+      const imageScaleY = selectedImage.scaleY || 1;
+
+      const actualCropX = cropX / imageScaleX;
+      const actualCropY = cropY / imageScaleY;
+      const actualCropWidth = cropWidth / imageScaleX;
+      const actualCropHeight = cropHeight / imageScaleY;
+
+      const croppedImage = new FabricImage(selectedImage._element, {
+        left: cropBounds.left + cropBounds.width / 2,
+        top: cropBounds.top + cropBounds.height / 2,
+
+        originX: "center",
+        originY: "center",
+        selectable: true,
+        evented: true,
+
+        // Apply crop using Fabric.js crop properties
+        cropX: actualCropX,
+        cropY: actualCropY,
+        width: actualCropWidth,
+        height: actualCropHeight,
+        scaleX: imageScaleX,
+        scaleY: imageScaleY,
+      });
+
+      canvasEditor.remove(selectedImage);
+      canvasEditor.add(croppedImage);
+
+      canvasEditor.setActiveObject(croppedImage);
+      canvasEditor.requestRenderAll();
+
+      exitCropMode();
+    } catch (error) {
+      console.error("Error applying crop", error);
+      toast.error("Failed to apply crop. Please try again.")
+      exitCropMode();
+    }
+  };
+
   if (!canvasEditor) {
     return (
       <div className="p-4">
@@ -225,22 +298,63 @@ const CropContent = () => {
             Crop Aspect Ratios
           </h3>
           <div className="grid grid-cols-3 gap-2">
-            {ASPECT_RATIOS.map(() => {
+            {ASPECT_RATIOS.map((ratio) => {
               const IconComponent = ratio.icon;
 
               return (
                 <button
                   key={ratio.label}
                   onClick={() => applyAspectRatio(ratio.value)}
+                  className={`text-center p-3 border rounded-lg transition-colors cursor-pointer ${
+                    selectedRatio === ratio.value
+                      ? "border-cyan-400 bg-cyan-400/10"
+                      : "border-white/20 hover:border-white/40 hover:bg-white/5"
+                  }`}
                 >
                   {" "}
                   <IconComponent className="h-6 w-6 mx-auto mb-2 text-white" />
+                  <div className="text-xs text-white">{ratio.label}</div>
+                  {ratio.ratio && (
+                    <div className="text-xs text-white/70">{ratio.ratio}</div>
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
       )}
+
+      {isCropMode && (
+        <div className="space-y-3 border-t border-white/10">
+          <Button onClick={applyCrop} className="w-full" variant="primary">
+            <CheckCheck className="h-4 w-4 mr-2" />
+            Apply Crop
+          </Button>
+
+          <Button
+            onClick={() => exitCropMode()}
+            variant="outline"
+            className="w-full"
+          >
+            <X className="h-4 w-4 mr-2" />
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      <div className="bg-slate-700/30 rounded-lg p-3">
+        <p className="text-xs text-white/70">
+          <strong> How to crop:</strong>
+          <br />
+          1. Click "Start Cropping"
+          <br />
+          2. Drag the blue rectangle to select crop area
+          <br />
+          3. Choose aspect ratio (optional)
+          <br />
+          4. Click "Apply Crop" to finalize
+        </p>
+      </div>
     </div>
   );
 };
