@@ -15,6 +15,10 @@ const Header = () => {
   const path = usePathname();
   const { isLoading } = useStoreUser();
 
+  if (path.includes("/editor")) {
+    return null; // Hide header on editor page
+  }
+
   return (
     <header className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 text-nowrap">
       <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-8 py-3 flex items-center justify-between gap-8">

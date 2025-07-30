@@ -83,7 +83,7 @@ const DEFAULT_VALUES = FILTER_CONFIGS.reduce((acc, config) => {
 }, {});
 
 const AdjustControls = () => {
- const [filterValues, setFilterValues] = useState(DEFAULT_VALUES);
+  const [filterValues, setFilterValues] = useState(DEFAULT_VALUES);
   const [isApplying, setIsApplying] = useState(false);
   const { canvasEditor } = useCanvas();
 
@@ -92,7 +92,7 @@ const AdjustControls = () => {
     const activeObject = canvasEditor.getActiveObject();
 
     if (activeObject && activeObject.type === "image") return activeObject;
-    
+
     const objects = canvasEditor.getObjects();
     return objects.find((obj) => obj.type === "image") || null;
   };
@@ -216,25 +216,27 @@ const AdjustControls = () => {
       </div>
 
       {/* Filter Controls */}
-      {FILTER_CONFIGS.map((config) => (
-        <div key={config.key} className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-sm text-white">{config.label}</label>
-            <span className="text-xs text-white/70">
-              {filterValues[config.key]}
-              {config.suffix || ""}
-            </span>
+      {FILTER_CONFIGS.map((config) => {
+        return (
+          <div key={config.key} className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-white">{config.label}</label>
+              <span className="text-xs text-white/70">
+                {filterValues[config.key]}
+                {config.suffix || ""}
+              </span>
+            </div>
+            <Slider
+              value={[filterValues[config.key]]}
+              onValueChange={(value) => handleValueChange(config.key, value)}
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              className="w-full"
+            />
           </div>
-          <Slider
-            value={[filterValues[config.key]]}
-            onValueChange={(value) => handleValueChange(config.key, value)}
-            min={config.min}
-            max={config.max}
-            step={config.step}
-            className="w-full"
-          />
-        </div>
-      ))}
+        );
+      })}
 
       {/* Info */}
       <div className="mt-6 p-3 bg-slate-700/50 rounded-lg">
@@ -247,7 +249,7 @@ const AdjustControls = () => {
       {/* Processing Indicator */}
       {isApplying && (
         <div className="flex items-center justify-center py-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-400"></div>
+          <Loader2 className="h-4 w-4 animate-spin" />
           <span className="ml-2 text-xs text-white/70">
             Applying filters...
           </span>
@@ -255,6 +257,6 @@ const AdjustControls = () => {
       )}
     </div>
   );
-}
+};
 
 export default AdjustControls;

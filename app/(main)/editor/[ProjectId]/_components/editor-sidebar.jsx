@@ -11,9 +11,11 @@ import {
 import React from "react";
 import CropContent from "./_tools/crop";
 import ResizeControls from "./_tools/resize";
-import AdjustControls from "./_tools/adjust";
 import BackgroundControls from "./_tools/ai-background";
 import TextControls from "./_tools/text";
+import AdjustControls from "./_tools/adjust";
+import AIExtendControls from "./_tools/ai-extend";
+import AIEditor from "./_tools/ai-edit";
 
 const TOOL_CONFIGS = {
   resize: {
@@ -94,7 +96,11 @@ function renderToolConfig(activeTool, project) {
     case "background":
       return <BackgroundControls project={project} />;
     case "text":
-    return <TextControls />
+      return <TextControls />;
+    case "ai_extender":
+      return <AIExtendControls project={project} />;
+    case "ai_edit":
+      return <AIEditor project={project} />;
 
     default:
       return <div className="text-white">Select a tool to get started</div>;

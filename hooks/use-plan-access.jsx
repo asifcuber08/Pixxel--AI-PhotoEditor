@@ -11,7 +11,7 @@ export function usePlanAccess() {
     // Free plan tools
     resize: true,
     crop: true,
-    adjusta: true,
+    adjust: true,
     text: true,
 
     // Pro-only tools
