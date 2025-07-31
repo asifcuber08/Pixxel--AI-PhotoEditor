@@ -1,3 +1,5 @@
+"use client";
+
 import Features from "@/components/features";
 import HeroSection from "@/components/hero";
 import Pricing from "@/components/pricing";

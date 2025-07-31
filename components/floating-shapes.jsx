@@ -1,4 +1,5 @@
 "use client"
+
 import { useParallax } from "@/hooks/use-parallax";
 import React from "react";
 

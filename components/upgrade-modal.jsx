@@ -1,3 +1,5 @@
+"use client";
+
 import { Crown, Zap } from "lucide-react";
 import React from "react";
 import {

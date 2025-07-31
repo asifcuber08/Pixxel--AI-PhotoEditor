@@ -8,6 +8,11 @@ const ProjectGrid = ({ projects }) => {
   const router = useRouter();
 
   const handleEditProject = (projectId) => {
+    console.log("=== DASHBOARD DEBUG ===");
+    console.log("Clicking edit for projectId:", projectId);
+    console.log("projectId type:", typeof projectId);
+    console.log("Navigating to:", `/editor/${projectId}`);
+    console.log("=======================");
     router.push(`/editor/${projectId}`);
   };
 

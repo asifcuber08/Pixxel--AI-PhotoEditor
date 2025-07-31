@@ -1,3 +1,5 @@
+"use client";
+
 import { useCanvas } from "@/context/context";
 import {
   Crop,
