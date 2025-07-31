@@ -39,9 +39,11 @@ const HeroSection = () => {
                 Start Creating
               </Button>
             </Link>
-            <Button variant="glass" size="xl">
-              Watch Demo
-            </Button>
+            <Link href="https://github.com/asifcuber08" target="blank">
+              <Button variant="glass" size="xl">
+                Github
+              </Button>
+            </Link>
           </div>
         </div>
 
