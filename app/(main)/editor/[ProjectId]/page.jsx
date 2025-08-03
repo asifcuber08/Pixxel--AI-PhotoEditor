@@ -14,8 +14,9 @@ import EditorSidebar from "./_components/editor-sidebar";
 const Editor = () => {
   const params = useParams();
   console.log("Editor route params:", params);
+  
   const projectId = params.projectId;
-  console.log("Editor projectId:", projectId);
+  console.log("Editor projectId:", projectId)
   const [canvasEditor, setCanvasEditor] = useState(null);
   const [processingMessage, setProcessingMessage] = useState(null);
 
