@@ -23,10 +23,11 @@ const Editor = () => {
   const [activeTool, setActiveTool] = useState("resize");
 
   // Get project data
-  const { data: project, isLoading } = useConvexQuery(
-  projectId ? api.projects.getProject : "skip",
-  projectId ? { args: { projectId } } : undefined
-);
+  const {
+    data: project,
+    isLoading,
+    error,
+  } = useConvexQuery(api.projects.getProject, { projectId });
 
   if (isLoading) {
     return (
@@ -39,21 +40,21 @@ const Editor = () => {
     );
   }
 
- if (!isLoading && !project) {
-  return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Project Not Found
-        </h1>
-        <p className="text-white/70">
-          The project you're looking for doesn't exist or you don't have
-          access to it.
-        </p>
+ if (error || !project) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Project Not Found
+          </h1>
+          <p className="text-white/70">
+            The project you're looking for doesn't exist or you don't have
+            access to it.
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <CanvasContext.Provider
