@@ -1,5 +1,6 @@
 "use client";
 
+import Contact from "@/components/contact";
 import Features from "@/components/features";
 import HeroSection from "@/components/hero";
 import Pricing from "@/components/pricing";
@@ -45,6 +46,9 @@ export default function Home() {
 
       {/* Pricing */}
       <Pricing />
+
+      {/* Contact */}
+      <Contact />
 
       <section className="py-20 text-center">
         <div className="max-w-4xl mx-auto px-6">
