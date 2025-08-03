@@ -108,7 +108,10 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
       toast.success("Project created successfully!");
 
       // Navigate to editor
-      router.push(`/editor/${projectId}`);
+      setTimeout(() => {
+        router.push(`/editor/${projectId}`);
+      }, 500);
+
     } catch (error) {
       console.error("Error creating project:", error);
       toast.error(
@@ -285,6 +288,6 @@ const NewPorjectModal = ({ isOpen, onClose }) => {
       />
     </>
   );
-}
+};
 
 export default NewPorjectModal;

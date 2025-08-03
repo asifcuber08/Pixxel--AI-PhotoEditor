@@ -25,10 +25,7 @@ const Editor = () => {
     data: project,
     isLoading,
     error,
-  } = useConvexQuery(
-    api.projects.getProject,
-    projectId ? { projectId } : "skip"
-  );
+  } = useConvexQuery(api.projects.getProject, { projectId });
 
   if (isLoading) {
     return (
