@@ -21,7 +21,7 @@ const Editor = () => {
   const [activeTool, setActiveTool] = useState("resize");
 
   // Get project data
-  const { data: project } = useConvexQuery(api.projects.getProject, {
+  const { data: project, isLoading } = useConvexQuery(api.projects.getProject, {
     args: { projectId },
   });
 
