@@ -1,129 +1,96 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Mail, Send } from "lucide-react";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import emailjs from "@emailjs/browser";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { Send } from "lucide-react";
 
 const Contact = () => {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  const form = useRef();
+  const [isSending, setIsSending] = useState(false);
 
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
+  const sendEmail = (e) => {
     e.preventDefault();
+    setIsSending(true);
 
-    if (!form.name || !form.email || !form.message) {
-      toast.success("Message sent! We'll get back to you soon.");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      // Simulate success
-      await new Promise((res) => setTimeout(res, 1500));
-
-      toast.success("Message sent! We'll get back to you soon.");
-      setForm({ name: "", email: "", message: "" });
-    } catch (success) {
-      toast.success("Message sent! We'll get back to you soon.");
-    } finally {
-      setSubmitting(false);
-    }
+    emailjs
+      .sendForm(
+        "service_k20mzjk",      // Your EmailJS service ID
+        "template_7hoq4yp",     // Your EmailJS template ID
+        form.current,
+        "22YENgkcbVALviXBe"     // Your EmailJS public key
+      )
+      .then(() => {
+        toast.success("Message sent successfully! ✅");
+        form.current.reset();
+        setIsSending(false);
+      })
+      .catch((error) => {
+        console.error("Email send error:", error);
+        toast.error("Failed to send message. Please try again.");
+        setIsSending(false);
+      });
   };
 
   return (
-    <main id="contact" className="min-h-screen bg-slate-900 text-white px-4 py-20 md:px-10">
-      <section className="max-w-3xl mx-auto space-y-8">
-        <div className="text-center">
-          <h1 className="text-5xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Contact Us</h1>
-          <p className="text-white/70 text-lg">
+    <section
+      id="contact"
+      className="py-24 px-6 bg-slate-900 flex flex-col items-center justify-center"
+    >
+      <div className="max-w-2xl w-full backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl p-10">
+        <div className="text-center mb-10">
+          <h2 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Contact Us</h2>
+          <p className="text-gray-400 mt-4 text-lg">
             Have a question, feedback, or just want to say hello?
           </p>
         </div>
 
         <form
-          onSubmit={handleSubmit}
-          className="space-y-6 bg-slate-800/50 border border-white/10 p-8 rounded-xl"
+          ref={form}
+          onSubmit={sendEmail}
+          className="flex flex-col space-y-5"
         >
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-white/80 font-medium">
-              Name
-            </label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              placeholder="Your name"
-              className="bg-slate-700 text-white border-white/20 placeholder:text-white/40"
-              value={form.name}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-white/80 font-medium">
-              Email
-            </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              className="bg-slate-700 text-white border-white/20 placeholder:text-white/40"
-              value={form.email}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label
-              htmlFor="message"
-              className="block mb-2 text-sm font-medium text-white"
-            >
-              Your Message
-            </label>
-            <textarea
-              id="message"
-              rows="4"
-              className="block w-full p-3 rounded-md bg-slate-800 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="Type your message here..."
-            ></textarea>
-          </div>
+          <input
+            type="text"
+            name="user_name"
+            placeholder="Your Name"
+            required
+            className="w-full p-3 rounded-md bg-[#131025] text-white border border-gray-600 focus:outline-none focus:border-cyan-500"
+          />
+          <input
+            type="email"
+            name="user_email"
+            placeholder="Your Email"
+            required
+            className="w-full p-3 rounded-md bg-[#131025] text-white border border-gray-600 focus:outline-none focus:border-cyan-500"
+          />
+          <input
+            type="text"
+            name="subject"
+            placeholder="Subject"
+            required
+            className="w-full p-3 rounded-md bg-[#131025] text-white border border-gray-600 focus:outline-none focus:border-cyan-500"
+          />
+          <textarea
+            name="message"
+            rows="5"
+            placeholder="Your Message"
+            required
+            className="w-full p-3 rounded-md bg-[#131025] text-white border border-gray-600 focus:outline-none focus:border-cyan-500"
+          ></textarea>
 
           <Button
             type="submit"
+            disabled={isSending}
             variant="primary"
-            disabled={submitting}
-            className="w-full flex gap-2 items-center justify-center"
           >
-            {submitting ? (
-              <>
-                <Mail className="h-4 w-4 animate-pulse" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Send Message
-              </>
-            )}
+            <Send className="h-4 w-4"/>
+            {isSending ? "Sending..." : "Send Message"}
           </Button>
         </form>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 };
 
